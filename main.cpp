@@ -1,7 +1,6 @@
 // Find and track a textured planar object.
 #include "includes.h"
 #include "FeatureFinder.h"
-#include "Serial.h"
 
 using namespace std;
 
@@ -11,7 +10,7 @@ int main(int argc, char* argv[]) {
 	int vidInd = 0;
 	string cameraFile = "robocam_calib.xml";
 	string boardFile = "hybrid_circles_wide.xml";
-	char* comport = "COM5";
+	char* comport = "ttyUSB";
 	//////////////////////////////////////////
 
 	//////////////////////////////////////////
@@ -100,20 +99,6 @@ int main(int argc, char* argv[]) {
 	Location trueLoc;
 	cameraLoc.setAngles(phi, theta, 0);
 
-	//Creates serial communication with robot
-	Serial superserial = Serial(comport);
-
-	if (!superserial.IsConnected()) {
-		cout << "Cannot access arduino, no tracking enabled" << endl;
-	}
-	else {
-		//Starts camera at Theta = 0 Phi = 0
-		char initdata[50];
-		sprintf_s(initdata, "T%iP%i\n", (int)(theta * 1000), (int)(phi * 1000));
-		cout << initdata << endl;
-		superserial.WriteData(initdata, 50);
-	}
-	
 	bool running = true;
 	bool pause = false;
 	bool lost = true;
@@ -197,16 +182,11 @@ int main(int argc, char* argv[]) {
 
 			//cout << atan2((centx - cameraMatrix.at<double>(0, 2)), cameraMatrix.at<double>(0, 0)) << endl;
 
-			if (superserial.IsConnected()){
+			if (false){ //add if ROS is connected check
+				// Need to take angle and covert to smaller int (back and forth)
 				float dtheta = atan2((centx - cameraMatrix.at<double>(0, 2)), cameraMatrix.at<double>(0, 0));
 				float dphi = atan2((centy - cameraMatrix.at<double>(1, 2)), cameraMatrix.at<double>(1, 1));
-
-				//Calculates theta and phi
-				/*float dist = sqrt(x*x + y*y + z*z);
-				float theta = atan2((float)z, x);
-				float phi = asin(((float)y) / dist);
-				*/
-
+				/*
 				if (abs(dtheta) > PI / 64) {
 					theta -= dtheta;
 				}
@@ -214,7 +194,7 @@ int main(int argc, char* argv[]) {
 				if (abs(dphi) > PI / 32) {
 					phi -= dphi;
 				}
-
+				*/
 				//Bounds theta and phi to -90 - 90
 				if (theta < -PI) {
 					theta = -PI;
@@ -222,6 +202,8 @@ int main(int argc, char* argv[]) {
 				else if (theta > PI){
 					theta = PI;
 				}
+				
+				int tout = (theta+PI)/(PI/64)
 
 				if (phi < -PI / 2) {
 					phi = -PI / 2;
@@ -229,12 +211,13 @@ int main(int argc, char* argv[]) {
 				else if (phi > PI / 2){
 					phi = PI / 2;
 				}
+				
+				int pout = (phi+PI/2)/(PI/32)
 
-				//Writes sero data to arduino
-				char data[50];
-				sprintf_s(data, "T%iP%i\n", (int)(-theta * 1000), (int)(phi * 1000));
-				bool result = superserial.WriteData(data, 50);
-				//cout << data << endl;
+				theta = tout*PI/32-PI
+				phi = pout*PI/32-PI/2
+				
+				// Write results to ROS node
 
 				//Delays extra to give servo time to respond
 				cvWaitKey(300);
