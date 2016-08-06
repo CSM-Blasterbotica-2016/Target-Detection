@@ -16,5 +16,5 @@
     -20. 20. 0.  20. 20. 0.  20. -20. 0.  -20. -20. 0.
   </data></locations>
 <childBoard>
-    "hybrid_circles.xml"</childBoard>
+    ""</childBoard>
 </opencv_storage>

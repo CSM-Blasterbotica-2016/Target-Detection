@@ -8,13 +8,12 @@ bool isEllipse(vector<cv::Point> contour){
 	bool rval = false;
 	areaActual = contourArea(contour);
 	perimeterActual = cv::arcLength(contour, true);
-	if (areaActual > 6) {
+	if (areaActual > 4) {
 		//Check if ellipse
 		if ((4 * 3.14159 *areaActual / (perimeterActual*perimeterActual) > 0.55)){
 			el = fitEllipse(contour);
 			dias = el.size;
 			areaIdeal = dias.area() * 3.14159 / 4;
-
 			if (abs(areaIdeal - areaActual) / areaIdeal > 0.10) {
 				rval = false;
 			}
@@ -112,7 +111,7 @@ Location FeatureFinder::findPattern(cv::Mat videoFrame, cv::Rect PredictRect) {
 			circles = findCircles(videoFrame);
 			cameraPoints = circles;
 			lastFrame = videoFrame;
-			cv::imshow("output", videoFrame);
+			//cv::imshow("output", videoFrame);
 			if (circles.size() == nlocs) {
 				found = true;
 			}
@@ -157,6 +156,10 @@ bool FeatureFinder::wasSuccessful(){
 	return success;
 }
 
+cv::Mat FeatureFinder::getDebugFrame(){
+	return debugFrame;
+}
+
 cv::Mat FeatureFinder::getLastFrame(){
 	return lastFrame;
 }
@@ -183,7 +186,7 @@ vector<cv::Point2f> FeatureFinder::findCircles(cv::Mat videoFrame){
 	cv::Mat imageClose;
 	morphologyEx(imageOpen, imageClose, cv::MORPH_CLOSE, structuringElmt);
 	// Now find connected components
-	imshow("whatIsee", imageClose);
+	//imshow("whatIsee", imageClose);
 	vector<vector<cv::Point>> contours;
 	vector<cv::Vec4i> hierarchy;
 	findContours(imageClose, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE);
@@ -228,7 +231,8 @@ vector<cv::Point2f> FeatureFinder::findCircles(cv::Mat videoFrame){
 		ellipse(ColorGrayFrame, el2, cv::Scalar(0, 0, 255),3);
 		circle(ColorGrayFrame, el1.center, 1, cv::Scalar(0,255,0),0);
 	}
-	imshow("grayframe", ColorGrayFrame);
+	
+	//imshow("grayframe", ColorGrayFrame);
 	bool solved = false;
 	if (circles.size() == 5) {
 		putText(ColorGrayFrame, "Determining...", cv::Point(10,10), CV_FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0), 3);
@@ -304,27 +308,29 @@ vector<cv::Point2f> FeatureFinder::findCircles(cv::Mat videoFrame){
 	else {
 	}
 	//Shows serach results
-	imshow("grayframe", ColorGrayFrame);
+	debugFrame = ColorGrayFrame;
 	return output;
 }
 
 vector<cv::Point2f> FeatureFinder::findAruco(cv::Mat videoFrame){
-	cv::Mat grayFrame, bw;
-	cvtColor(videoFrame, grayFrame, CV_RGB2GRAY);	
+	cv::Mat grayFrame, bw, ColorGrayFrame;
+	cvtColor(videoFrame, grayFrame, CV_RGB2GRAY);
+	equalizeHist(grayFrame, grayFrame);
+	cvtColor(grayFrame, ColorGrayFrame, CV_GRAY2RGB);
 	targetshape.clear();
 	vector<int>markerIds; 
 	vector<cv::Point2f> output;
 	vector<vector<cv::Point2f>> markerCorners, rejectedCandidates;
 	cv::aruco::DetectorParameters parameters;
 	parameters.adaptiveThreshConstant = 1;
-	cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_5X5_50);
+	cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_4X4_50);
 
 	//Serches for 5x5 markers 0-49 with default serarch parameters
 	cv::aruco::detectMarkers(grayFrame, dictionary, markerCorners, markerIds, parameters, rejectedCandidates);
 
 	if (markerIds.size() > 0){
 		//Draws detected markers
-		cv::aruco::drawDetectedMarkers(videoFrame, markerCorners, markerIds);
+		cv::aruco::drawDetectedMarkers(ColorGrayFrame, markerCorners, markerIds);
 		for (int i = 0; i < markerIds.size(); i++){
 			std::map<int, vector<cv::Point3f>>::iterator it;
 			int j = markerIds.at(i);
@@ -336,13 +342,16 @@ vector<cv::Point2f> FeatureFinder::findAruco(cv::Mat videoFrame){
 			output.insert(output.end(), markerCorners.at(i).begin(), markerCorners.at(i).end());
 		}	
 	}
-	
-	imshow("markers square", videoFrame);
+	debugFrame = ColorGrayFrame;
 	return output;
 
 }
 
 vector<cv::Point2f> FeatureFinder::findChAruco(cv::Mat videoFrame){
+	cv::Mat grayFrame, ColorGrayFrame;
+	cvtColor(videoFrame, grayFrame, CV_RGB2GRAY);
+	equalizeHist(grayFrame, grayFrame);
+	cvtColor(grayFrame, ColorGrayFrame, CV_GRAY2RGB);
 	vector<int> markerIds;
 	vector<cv::Point2f> output;
 	targetshape.clear();
@@ -353,8 +362,10 @@ vector<cv::Point2f> FeatureFinder::findChAruco(cv::Mat videoFrame){
 	cv::aruco::detectMarkers(videoFrame, dict, markerCorners, markerIds);
 
 	if (markerIds.size() > 0){
+		
 		cout << "Charucocheck\r\n";
 		cv::aruco::detectCharucoDiamond(videoFrame, markerCorners, markerIds, 1.5, diamondCorners, diamondIds);
+		cv::aruco::drawDetectedCornersCharuco(ColorGrayFrame, diamondCorners, diamondIds);
 		for (int i = 0; i < diamondCorners.size(); i++){
 			std::map<cv::Vec4i, int >::iterator it;
 			int j = find(charucoIds.begin(), charucoIds.end(), diamondIds.at(i)) - charucoIds.begin();

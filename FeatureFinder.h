@@ -4,10 +4,11 @@ class FeatureFinder{
 private:
 	int shapeType;
 	vector<cv::Point3f> altShape;
-	std::map< int, vector<cv::Point3f> > targetDB;
+	std::map<int, vector<cv::Point3f>> targetDB;
 	vector<cv::Vec4i> charucoIds;
 	vector<cv::Point3f> targetshape;
 	cv::Mat lastFrame;
+	cv::Mat debugFrame;
 	cv::Mat cameraMatrix;
 	cv::Mat distCoeffs;
 	cv::Mat map1;
@@ -27,5 +28,6 @@ public:
 	vector<cv::Point2f> findAruco(cv::Mat videoFrame);
 	vector<cv::Point2f> findChAruco(cv::Mat videoFrame);
 	cv::Mat getLastFrame();
+	cv::Mat getDebugFrame();
 	bool wasSuccessful();
 };

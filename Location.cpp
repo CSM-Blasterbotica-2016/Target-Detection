@@ -6,7 +6,7 @@ Location::Location() {
 	this->Xmat = (cv::Mat_<double>(6, 1) << 0, 0, 0, 0, 0, 0);
 }
 
-Location::Location(cv::Mat X) {
+Location::Location(const cv::Mat X) {
 	//Loads a location from either a location vector or a transformation matrix
 	Xmat = (cv::Mat_<double>(6, 1) << 0, 0, 0, 0, 0, 0);
 
@@ -30,7 +30,7 @@ Location::Location(cv::Mat X) {
 		
 }
 
-Location::Location(cv::Mat rvec, cv::Mat tvec) {
+Location::Location(const cv::Mat rvec, const cv::Mat tvec) {
 	//Creates a location vector from a rotation vector and a translation vector
 	cv::vconcat(tvec, rvec, this->Xmat);
 }
@@ -69,12 +69,12 @@ cv::Mat Location::getTF(){
 	return Tf;
 }
 
-void Location::setLoc(cv::Mat X){
+void Location::setLoc(const cv::Mat X){
 	// Sets a new location based on a location vector
 	this->Xmat = X;
 }
 
-void Location::setLoc(cv::Mat rvec, cv::Mat tvec){
+void Location::setLoc(const cv::Mat rvec, const cv::Mat tvec){
 	// Sets a new location based on a rotation and translation vector
 	vconcat(tvec, rvec, this->Xmat);
 }
@@ -139,5 +139,23 @@ double Location::getAY(){
 
 double Location::getAZ(){
 	return this->Xmat.at<double>(5, 0);
+}
+
+
+cv::Mat Location::getAngles(){
+	cv::Mat tf = this->getTF();
+	cv::Mat cameraMatrix, rotMatrix, transVect, rotMatrixX, rotMatrixY, rotMatrixZ, eulerAngles;
+
+	tf = tf(cv::Rect(0, 0, 4, 3));
+	cv::decomposeProjectionMatrix(tf, cameraMatrix,
+		rotMatrix,
+		transVect,
+		rotMatrixX,
+		rotMatrixY,
+		rotMatrixZ,
+		eulerAngles);
+
+	return eulerAngles;
+
 }
 

@@ -1,6 +1,6 @@
 #ifndef LOCATION_H
 #define LOCATION_H
-#include <opencv2/opencv.hpp>
+#include <opencv2\opencv.hpp>
 
 const double PI = 3.1415926535;
 
@@ -11,14 +11,14 @@ private:
 
 public:
 	Location();
-	Location(cv::Mat X);
-	Location(cv::Mat rvec, cv::Mat tvec);
+	Location(const cv::Mat X);
+	Location(const cv::Mat rvec, const cv::Mat tvec);
 	Location(double xin, double yin, double zin, double axin, double ayin, double azin);
 	cv::Mat getLoc();
 	cv::Mat getRvec();
 	cv::Mat getTvec();
-	void setLoc(cv::Mat X);
-	void setLoc(cv::Mat rvec, cv::Mat tvec);
+	void setLoc(const cv::Mat X);
+	void setLoc(const cv::Mat rvec, const cv::Mat tvec);
 	void setX(double x);
 	void setY(double y);
 	void setZ(double z);
@@ -33,8 +33,8 @@ public:
 	double getAZ();
 	cv::Mat getR();
 	cv::Mat getTF();
-	cv::Mat Location::getAngles();
-	void Location::setAngles(double ax, double ay, double az);
+	cv::Mat getAngles();
+	void setAngles(double ax, double ay, double az);
 
 };
 
