@@ -42,7 +42,7 @@ FeatureFinder::FeatureFinder(string boardFile, string cameraFile){
 	nlocs = 0;
 	targetshape.clear();
 	targetDB.clear();
-	
+
 	cv::FileStorage bf(boardFile, cv::FileStorage::READ);
 
 	if (!bf.isOpened()){

@@ -24,7 +24,6 @@ int main(int argc, char* argv[]) {
 	
 	
 	cv::Mat videoFrame;
-
 	cv::Mat grayscaleFrame;
 	vector<cv::Point2f> features;
 
